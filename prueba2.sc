@@ -7,22 +7,33 @@
 
 //------------------------------FUNCIONES GENERICAS---------------------------------
 object prueba2{
-def crearRandomCol(): Int = {
+
+//Obtiene el valor de una posicion indice del tablero
+def obtener(tablero: List[Int], indice: Int): Int = {
+  if (!tablero.isEmpty) {
+    if (indice == 1) tablero.head
+    else obtener(tablero.tail, indice - 1)
+  } else -1
+}
+def crearValorRandom(): Int = {
+  val list = List(2,4)
   val random = util.Random;
-  val colo = random.nextInt(8) + 1
+  val colo = list(random.nextInt(2))
   colo
 } //> crearRandomCol: ()Int
-def crearRandomPos(): Int = {
+def crearRandomPos(tam:Int): Int = {
   val random = util.Random;
-  val pos = random.nextInt(8) + 1
+  val pos = random.nextInt(tam) + 1
   pos
 } //> crearRandomPos: ()Int
-def poner(l: List[Int]): List[Int] = {
-  val pos = crearRandomPos()
-  val col = crearRandomCol()
-  if (l.isEmpty) Nil
-  else if (pos == 1) col :: l.tail
-  else l.head :: poner(l.tail)
+def poner(lista: List[Int]): List[Int] = {
+  val pos = crearRandomPos(lista.length)
+  val col = crearValorRandom()
+  if (lista.isEmpty) Nil
+    if (obtener(lista,pos)==0)
+      if (pos == 1) col :: lista.tail
+      else lista.head :: poner(lista.tail)
+  else poner(lista)
 } //> poner: (l: List[Int])List[Int]
 
 def poner2(l: List[Int], valor: Int, pos: Int): List[Int] = {
@@ -37,12 +48,19 @@ def generarTab(filas: Int, columnas: Int, tam: Int): List[Int] = {
   else 0 :: generarTab(filas, columnas, tam - 1)
 
 } //> generarTab: (filas: Int, columnas: Int, tam: Int)List[Int]
-
-def rellenarTab(lista: List[Int], numCasillas: Int): List[Int] = {
-  if (lista.isEmpty) Nil
-  else if (numCasillas != 0) rellenarTab(poner(lista), numCasillas - 1)
-  else lista
-} //> rellenarTab: (lista: List[Int], numCasillas: Int)List[Int]
+def huecosLibres(tablero:List[Int]):Int = {
+  if (tablero.length > 0){
+    if (tablero.head == 0)
+      huecosLibres(tablero.tail)+1
+    else
+      huecosLibres(tablero.tail)
+  } else 0
+}
+def rellenarTab(tablero: List[Int], numCasillas: Int): List[Int] = {
+  if (tablero.isEmpty) Nil
+  else if ((huecosLibres(tablero)>0) && (numCasillas != 0)){ rellenarTab(poner(tablero), numCasillas - 1)}
+  else tablero
+}
 
 def imprimir(lista: List[Int], columnas: Int) {
   if (!lista.isEmpty) {
@@ -50,22 +68,14 @@ def imprimir(lista: List[Int], columnas: Int) {
     print("|" + lista.head + "|")
     imprimir(lista.tail, columnas)
   }
-} //> imprimir: (lista: List[Int], columnas: Int)Unit
+}
 
-//Obtiene el valor de una posicion indice del tablero
-def obtener(tablero: List[Int], indice: Int): Int = {
-  if (!tablero.isEmpty) {
-    if (indice == 1) tablero.head
-    else obtener(tablero.tail, indice - 1)
-  } else -1
-
-} //> obtener: (tablero: List[Int], indice: Int)Int
 def eliminarSumar(tablero: List[Int], indice: Int): List[Int] = {
   if (!tablero.isEmpty) {
     if (indice == 1) 0 :: tablero.tail
     else tablero.head :: eliminarSumar(tablero.tail, indice - 1)
   } else tablero
-} //> eliminarSumar: (tablero: List[Int], indice: Int)List[Int]
+}
 
 
 //--------------------------FUNCIONES AUXILIARES DE MOVIMIENTO--------------------------
@@ -86,16 +96,6 @@ def moverAbajo(tablero: List[Int], columnas: Int): List[Int] = {
     } else tablero.head :: moverAbajo(tablero.tail, columnas)
   } else tablero
 }
-def moverArriba(tablero: List[Int], columnas: Int): List[Int] = {
-  val tablero_aux = reverse(tablero)
-  if (!tablero_aux.isEmpty) {
-    if (tablero_aux.head > 0) {
-      if (obtener(tablero_aux, columnas + 1) == 0) reverse(moverAbajo(poner2(eliminarSumar(tablero_aux, 1), tablero_aux.head, columnas + 1), columnas))
-      else reverse(tablero_aux.head :: moverAbajo(tablero_aux.tail, columnas))
-
-    } else reverse(tablero_aux.head :: moverAbajo(tablero_aux.tail, columnas))
-  } else tablero_aux
-} 
 def moverDerecha(tablero: List[Int], columnas: Int): List[Int] = {
   if (!tablero.isEmpty) {
     if ((tablero.head > 0)) {
@@ -105,7 +105,17 @@ def moverDerecha(tablero: List[Int], columnas: Int): List[Int] = {
     } else tablero.head :: moverDerecha(tablero.tail, columnas)
   } else tablero
 }
-def moverIzquierda(tablero: List[Int], columnas: Int): List[Int] = {
+def moverArriba(tablero: List[Int], columnas: Int): List[Int] = {
+  val tablero_aux = reverse(tablero)
+  if (!tablero_aux.isEmpty) {
+    if (tablero_aux.head > 0) {
+      if (obtener(tablero_aux, columnas + 1) == 0) reverse(moverAbajo(poner2(eliminarSumar(tablero_aux, 1), tablero_aux.head, columnas + 1), columnas))
+      else reverse(tablero_aux.head :: moverAbajo(tablero_aux.tail, columnas))
+
+    } else reverse(tablero_aux.head :: moverAbajo(tablero_aux.tail, columnas))
+  } else tablero_aux
+}
+  def moverIzquierda(tablero: List[Int], columnas: Int): List[Int] = {
     val tablero_aux = reverse(tablero)
     if (!tablero_aux.isEmpty) {
       if (tablero_aux.head > 0) {
@@ -115,7 +125,6 @@ def moverIzquierda(tablero: List[Int], columnas: Int): List[Int] = {
       } else reverse(tablero_aux.head :: moverDerecha(tablero_aux.tail, columnas))
     } else tablero_aux
   }
-  
 
 //------------------------ MOVIMIENTO DE TODAS LAS CASILLAS-------------------------------
 
@@ -143,7 +152,7 @@ val columnas = 6
 val tam = filas * columnas
 
 val tablero = generarTab(6, 6, tam)
-val tableroRelleno = rellenarTab(tablero, 9) 
+val tableroRelleno = rellenarTab(tablero, 222)
 
 imprimir(tableroRelleno, 6)
 
@@ -156,6 +165,8 @@ imprimir(tableroRelleno, 6)
 imprimir(moverDerecha(tableroRelleno, 6), 6)
 
 imprimir(moverTodoDerecha(tableroRelleno, filas,columnas), 6)
-  
+
 imprimir(moverTodoIzquierda(tableroRelleno,filas ,columnas), 6)
+
+huecosLibres(tableroRelleno)
 }
