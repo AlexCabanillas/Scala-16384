@@ -2,7 +2,7 @@
 |                 Luis Alejandro Cabanillas Prudencio  DNI: 04236930P                |
 |                    Álvaro de las Heras Fernández  DNI: 03146833L                   |
 |                                                                                    |
-|         16384 Juego que simula al 2048 implementado con matrices y CUDA            |
+|                16384 Juego que simula al 2048 implementado con Scala               |
 ====================================================================================*/
 
 //------------------------------FUNCIONES GENERICAS---------------------------------
