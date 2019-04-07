@@ -51,11 +51,11 @@ def imprimir(lista:List[Int],columnas: Int, filas: Int){
 	
 }                                                 //> imprimir: (lista: List[Int], columnas: Int, filas: Int)Unit
   val tablero =generarTab(3,3,9)                  //> tablero  : List[Int] = List(0, 0, 0, 0, 0, 0, 0, 0, 0)
-  val tableroRelleno=rellenarTab(tablero,5)       //> tableroRelleno  : List[Int] = List(0, 5, 6, 1, 0, 0, 0, 8, 0)
+  val tableroRelleno=rellenarTab(tablero,5)       //> tableroRelleno  : List[Int] = List(3, 0, 0, 1, 0, 3, 0, 0, 0)
   imprimir(tableroRelleno,3,3)                    //> 
-                                                  //| |0||5||6|
-                                                  //| |1||0||0|
-                                                  //| |0||8||0|
+                                                  //| |3||0||0|
+                                                  //| |1||0||3|
+                                                  //| |0||0||0|
   
   /*def pruebaImp(){
   print("g")
@@ -70,9 +70,9 @@ def imprimir(lista:List[Int],columnas: Int, filas: Int){
   
   }                                               //> obtener: (tablero: List[Int], indice: Int)Int
   
-  obtener(tableroRelleno,1)                       //> res1: Int = 0
-  obtener(tableroRelleno,2)                       //> res2: Int = 5
-  obtener(tableroRelleno,3)                       //> res3: Int = 6
+  obtener(tableroRelleno,1)                       //> res1: Int = 3
+  obtener(tableroRelleno,2)                       //> res2: Int = 0
+  obtener(tableroRelleno,3)                       //> res3: Int = 0
   obtener(tableroRelleno,4)                       //> res4: Int = 1
   obtener(tableroRelleno,5)                       //> res5: Int = 0
   obtener(tableroRelleno,15)                      //> res6: Int = -1
@@ -83,11 +83,11 @@ def imprimir(lista:List[Int],columnas: Int, filas: Int){
   	else tablero.head::eliminarSumar(tablero.tail,indice-1)
   	}else tablero
   }                                               //> eliminarSumar: (tablero: List[Int], indice: Int)List[Int]
-  eliminarSumar(tableroRelleno,1)                 //> res7: List[Int] = List(0, 5, 6, 1, 0, 0, 0, 8, 0)
-  eliminarSumar(tableroRelleno,2)                 //> res8: List[Int] = List(0, 0, 6, 1, 0, 0, 0, 8, 0)
-  eliminarSumar(tableroRelleno,3)                 //> res9: List[Int] = List(0, 5, 0, 1, 0, 0, 0, 8, 0)
-  eliminarSumar(tableroRelleno,4)                 //> res10: List[Int] = List(0, 5, 6, 0, 0, 0, 0, 8, 0)
-  eliminarSumar(tableroRelleno,5)                 //> res11: List[Int] = List(0, 5, 6, 1, 0, 0, 0, 8, 0)
+  eliminarSumar(tableroRelleno,1)                 //> res7: List[Int] = List(0, 0, 0, 1, 0, 3, 0, 0, 0)
+  eliminarSumar(tableroRelleno,2)                 //> res8: List[Int] = List(3, 0, 0, 1, 0, 3, 0, 0, 0)
+  eliminarSumar(tableroRelleno,3)                 //> res9: List[Int] = List(3, 0, 0, 1, 0, 3, 0, 0, 0)
+  eliminarSumar(tableroRelleno,4)                 //> res10: List[Int] = List(3, 0, 0, 0, 0, 3, 0, 0, 0)
+  eliminarSumar(tableroRelleno,5)                 //> res11: List[Int] = List(3, 0, 0, 1, 0, 3, 0, 0, 0)
   
   /*def movimiento(tablero:List[Int],columnas:Int,direccion:Int): List[Int]={
   //Movimiento hacia abajo
@@ -127,10 +127,10 @@ def imprimir(lista:List[Int],columnas: Int, filas: Int){
  val tablero_aux=reverse(tablero)
  if(!tablero_aux.isEmpty){
   	if (tablero_aux.head>0){
-  		if(obtener(tablero_aux,columnas+1)==0)  moverArriba(poner2(eliminarSumar(tablero_aux,1),tablero_aux.head,columnas+1),columnas)
-  		else tablero_aux.head:: moverArriba(tablero_aux.tail,columnas)
+  		if(obtener(tablero_aux,columnas+1)==0)  reverse(moverAbajo(poner2(eliminarSumar(tablero_aux,1),tablero_aux.head,columnas+1),columnas))
+  		else reverse(tablero_aux.head::moverAbajo(tablero_aux.tail,columnas))
   	
-  	}else tablero.head::moverArriba(tablero.tail,columnas)
+  	}else reverse(tablero_aux.head::moverAbajo(tablero_aux.tail,columnas))
  }else tablero_aux
  }                                                //> moverArriba: (tablero: List[Int], columnas: Int)List[Int]
  
@@ -145,35 +145,35 @@ def imprimir(lista:List[Int],columnas: Int, filas: Int){
  }                                                //> moverAbajo: (tablero: List[Int], columnas: Int)List[Int]
  
  imprimir(tableroRelleno,3,3)                     //> 
-                                                  //| |0||5||6|
-                                                  //| |1||0||0|
-                                                  //| |0||8||0|
+                                                  //| |3||0||0|
+                                                  //| |1||0||3|
+                                                  //| |0||0||0|
  
  
  
  
    
  imprimir(moverArriba(tableroRelleno,3),3,3)      //> 
-                                                  //| |0||5||6|
+                                                  //| |3||0||3|
                                                   //| |1||0||0|
-                                                  //| |0||8||0|
+                                                  //| |0||0||0|
   
   
   
   
   
  imprimir(tableroRelleno,3,3)                     //> 
-                                                  //| |0||5||6|
-                                                  //| |1||0||0|
-                                                  //| |0||8||0|
+                                                  //| |3||0||0|
+                                                  //| |1||0||3|
+                                                  //| |0||0||0|
  
  
  
    
  imprimir(moverAbajo(tableroRelleno,3),3,3)       //> 
+                                                  //| |3||0||0|
                                                   //| |0||0||0|
-                                                  //| |0||5||0|
-                                                  //| |1||8||6|
+                                                  //| |1||0||3|
  
  
  
