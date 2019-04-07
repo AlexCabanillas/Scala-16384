@@ -86,15 +86,6 @@ def moverAbajo(tablero: List[Int], columnas: Int): List[Int] = {
     } else tablero.head :: moverAbajo(tablero.tail, columnas)
   } else tablero
 }
-def moverDerecha(tablero: List[Int], columnas: Int): List[Int] = {
-  if (!tablero.isEmpty) {
-    if ((tablero.head > 0)) {
-      if ((obtener(tablero, 2) == 0) && ((tablero.length) % columnas != 1)) moverDerecha(poner2(eliminarSumar(tablero, 1), tablero.head, 2), columnas)
-      else tablero.head :: moverDerecha(tablero.tail, columnas)
-
-    } else tablero.head :: moverDerecha(tablero.tail, columnas)
-  } else tablero
-}
 def moverArriba(tablero: List[Int], columnas: Int): List[Int] = {
   val tablero_aux = reverse(tablero)
   if (!tablero_aux.isEmpty) {
@@ -104,7 +95,27 @@ def moverArriba(tablero: List[Int], columnas: Int): List[Int] = {
 
     } else reverse(tablero_aux.head :: moverAbajo(tablero_aux.tail, columnas))
   } else tablero_aux
-} //> moverArriba: (tablero: List[Int], columnas: Int)List[Int]
+} 
+def moverDerecha(tablero: List[Int], columnas: Int): List[Int] = {
+  if (!tablero.isEmpty) {
+    if ((tablero.head > 0)) {
+      if ((obtener(tablero, 2) == 0) && ((tablero.length) % columnas != 1)) moverDerecha(poner2(eliminarSumar(tablero, 1), tablero.head, 2), columnas)
+      else tablero.head :: moverDerecha(tablero.tail, columnas)
+
+    } else tablero.head :: moverDerecha(tablero.tail, columnas)
+  } else tablero
+}
+def moverIzquierda(tablero: List[Int], columnas: Int): List[Int] = {
+    val tablero_aux = reverse(tablero)
+    if (!tablero_aux.isEmpty) {
+      if (tablero_aux.head > 0) {
+        if (obtener(tablero_aux, columnas + 1) == 0) reverse(moverDerecha(poner2(eliminarSumar(tablero_aux, 1), tablero_aux.head, columnas + 1), columnas))
+        else reverse(tablero_aux.head :: moverDerecha(tablero_aux.tail, columnas))
+
+      } else reverse(tablero_aux.head :: moverDerecha(tablero_aux.tail, columnas))
+    } else tablero_aux
+  }
+  
 
 //------------------------ MOVIMIENTO DE TODAS LAS CASILLAS-------------------------------
 
@@ -119,6 +130,10 @@ def moverTodoArriba(tablero: List[Int], filas: Int, columnas: Int): List[Int] = 
 def moverTodoDerecha(tablero: List[Int], filas: Int, columnas: Int): List[Int] = {
   if (filas == 1) tablero
   else moverTodoDerecha(moverDerecha(tablero, columnas), filas - 1, columnas)
+}
+def moverTodoIzquierda(tablero: List[Int], filas: Int, columnas: Int): List[Int] = {
+  if (filas == 1) tablero
+  else moverTodoIzquierda(moverIzquierda(tablero, columnas), filas - 1, columnas)
 }
 
 //------------------------------- PRUEBAS ----------------------------------------------
@@ -141,4 +156,6 @@ imprimir(tableroRelleno, 6)
 imprimir(moverDerecha(tableroRelleno, 6), 6)
 
 imprimir(moverTodoDerecha(tableroRelleno, filas,columnas), 6)
+  
+imprimir(moverTodoIzquierda(tableroRelleno,filas ,columnas), 6)
 }
