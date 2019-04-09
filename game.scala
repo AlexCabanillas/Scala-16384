@@ -19,15 +19,15 @@ object game {
   }
 
   def crearValorRandom(dificultad: Int): Int = {
-    val valores = List(2, 4, 8)
+    val valores = List(2,4,8)
     val random = util.Random;
-    if(dificultad < 4){
-      val colo=obtener(valores,random.nextInt(dificultad)+1)
+    if (dificultad < 4) {
+      val colo = obtener(valores, random.nextInt(dificultad) + 1)
       colo
-    }else{
-      val colo=obtener(valores,random.nextInt(3)+1)
+    } else {
+      val colo = obtener(valores, random.nextInt(3) + 1)
       colo
-      
+
     }
   }
 
@@ -66,9 +66,9 @@ object game {
         huecosLibres(tablero.tail)
     } else 0
   }
-  def rellenarTab(tablero: List[Int], numCasillas: Int,dificultad:Int): List[Int] = {
+  def rellenarTab(tablero: List[Int], numCasillas: Int, dificultad: Int): List[Int] = {
     if (tablero.isEmpty) Nil
-    else if ((huecosLibres(tablero) > 0) && (numCasillas != 0)) { rellenarTab(poner(tablero,dificultad), numCasillas - 1,dificultad) }
+    else if ((huecosLibres(tablero) > 0) && (numCasillas != 0)) { rellenarTab(poner(tablero, dificultad), numCasillas - 1, dificultad) }
     else tablero
   }
 
@@ -94,6 +94,11 @@ object game {
     else reverse(lista.tail) ::: lista.head :: Nil
   }
 
+  def quitarHasta(tablero: List[Int], limite: Int): List[Int] = {
+    if (tablero.length == limite) Nil
+    else tablero.head :: quitarHasta(tablero.tail, limite)
+
+  }
   //------------------------   MOVIMIENTOS   -------------------------------
 
   def moverAbajo(tablero: List[Int], columnas: Int): List[Int] = {
@@ -154,97 +159,209 @@ object game {
     else moverTodoIzquierda(moverIzquierda(tablero, columnas), movimientos - 1, columnas)
   }
 
-  def sumarIzquierda(tablero: List[Int], columnas: Int): List[Int] = {
+  def sumarIzquierda(tablero: List[Int], columnas: Int, puntuacion: Int, conteo: Int): List[Int] = {
     if (!tablero.isEmpty) {
       if ((tablero.head > 0)) {
-        if ((obtener(tablero, 2) == tablero.head) && ((tablero.length) % columnas != 1)) sumarIzquierda(poner2(eliminar(tablero, 2), tablero.head * 2, 1), columnas)
-        else tablero.head :: sumarIzquierda(tablero.tail, columnas)
-      } else tablero.head :: sumarIzquierda(tablero.tail, columnas)
-    } else tablero
+        if ((obtener(tablero, 2) == tablero.head) && ((tablero.length) % columnas != 1)) sumarIzquierda(poner2(eliminar(tablero, 2), tablero.head * 2, 1), columnas, puntuacion + tablero.head * 2, conteo + 1)
+        else tablero.head :: sumarIzquierda(tablero.tail, columnas, puntuacion, conteo)
+      } else tablero.head :: sumarIzquierda(tablero.tail, columnas, puntuacion, conteo)
+    } else tablero ::: puntuacion :: conteo :: Nil
   }
-  def sumarArriba(tablero: List[Int], columnas: Int,puntuacion:Int): List[Int] = {
+  def sumarArriba(tablero: List[Int], columnas: Int, puntuacion: Int, conteo: Int): List[Int] = {
     if (!tablero.isEmpty) {
       if ((tablero.head > 0)) {
-        if (obtener(tablero, columnas + 1) == tablero.head){
-          
-          sumarArriba(poner2(eliminar(tablero, columnas + 1), tablero.head * 2, 1), columnas,puntuacion+tablero.head*2)
+        if (obtener(tablero, columnas + 1) == tablero.head) {
+          sumarArriba(poner2(eliminar(tablero, columnas + 1), tablero.head * 2, 1), columnas, puntuacion + tablero.head * 2, conteo + 1)
+        } else tablero.head :: sumarArriba(tablero.tail, columnas, puntuacion, conteo)
+
+      } else tablero.head :: sumarArriba(tablero.tail, columnas, puntuacion, conteo)
+    } else tablero ::: puntuacion :: conteo :: Nil
+  }
+
+  def juego(tablero: List[Int], columnas: Int, dificultad: Int, casillas: Int, puntuacion: Int, conteo: Int, bloqueoEjeX: Boolean, bloqueoEjeY: Boolean, vidas: Int, modo: Boolean): Unit = {
+    if (bloqueoEjeX && bloqueoEjeY) {
+      println("¡Has perdido la partida!")
+      nuevaPartida(dificultad, vidas - 1, puntuacion,modo)
+    } else {
+      imprimir(tablero, columnas)
+
+      println("\nPuntuacion: " + puntuacion + "\tConteo: " + conteo + "\tVidas: " + vidas)
+      print("\nMovimiento: ")
+
+      val tecla = movimiento(modo)
+      tecla match {
+        case ('w' | 'W') => {
+          val tableroSumado = sumarArriba(moverTodoArriba(tablero, columnas, columnas), columnas, puntuacion, conteo)
+          if (huecosLibres(tablero) == 0) {
+            if (puntuacion == obtener(tableroSumado, tableroSumado.length - 1)) {
+              println("Ya no puedes mover verticalmente")
+              juego(
+                rellenarTab(moverTodoArriba(quitarHasta(tableroSumado, 2), columnas, columnas), casillas, dificultad),
+                columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), bloqueoEjeX, true, vidas, modo)
+            } else {
+              juego(
+                rellenarTab(moverTodoArriba(quitarHasta(tableroSumado, 2), columnas, columnas), casillas, dificultad),
+                columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), false, false, vidas, modo)
+            }
+          } else {
+            juego(
+              rellenarTab(moverTodoArriba(quitarHasta(tableroSumado, 2), columnas, columnas), casillas, dificultad),
+              columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), false, false, vidas, modo)
+
+          }
         }
-        else tablero.head :: sumarArriba(tablero.tail, columnas,puntuacion)
+        case ('a' | 'A') => {
+          val tableroSumado = sumarIzquierda(moverTodoIzquierda(tablero, columnas, columnas), columnas, puntuacion, conteo)
+          if (huecosLibres(tablero) == 0) {
+            if (puntuacion == obtener(tableroSumado, tableroSumado.length - 1)) {
+              println("Ya no puedes mover horizontalmente")
+              juego(
+                rellenarTab(moverTodoIzquierda(quitarHasta(tableroSumado, 2), columnas, columnas), casillas, dificultad),
+                columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), true, bloqueoEjeY, vidas, modo)
 
-      } else tablero.head :: sumarArriba(tablero.tail, columnas,puntuacion)
-    } else tablero
+            } else {
+              juego(
+                rellenarTab(moverTodoIzquierda(quitarHasta(tableroSumado, 2), columnas, columnas), casillas, dificultad),
+                columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), false, false, vidas, modo)
+            }
+          } else {
+            juego(
+              rellenarTab(moverTodoIzquierda(quitarHasta(tableroSumado, 2), columnas, columnas), casillas, dificultad),
+              columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), false, false, vidas, modo)
+          }
+        }
+        case ('d' | 'D') => {
+          val tableroSumado = sumarIzquierda(reverse(moverTodoDerecha(tablero, columnas, columnas)), columnas, puntuacion, conteo)
+          if (huecosLibres(tablero) == 0) {
+            if (puntuacion == obtener(tableroSumado, tableroSumado.length - 1)) {
+
+              println("Ya no puedes mover horizontalmente")
+              juego(
+                rellenarTab(moverTodoDerecha(reverse(quitarHasta(tableroSumado, 2)), columnas, columnas), casillas, dificultad),
+                columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), true, bloqueoEjeY, vidas, modo)
+            } else {
+              juego(
+                rellenarTab(moverTodoDerecha(reverse(quitarHasta(tableroSumado, 2)), columnas, columnas), casillas, dificultad),
+                columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), false, false, vidas, modo)
+            }
+          } else {
+            juego(
+              rellenarTab(moverTodoDerecha(reverse(quitarHasta(tableroSumado, 2)), columnas, columnas), casillas, dificultad),
+              columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), false, false, vidas, modo)
+          }
+        }
+        case ('s' | 'S') => {
+          val tableroSumado = sumarArriba(reverse(moverTodoAbajo(tablero, columnas, columnas)), columnas, puntuacion, conteo)
+          if (huecosLibres(tablero) == 0) {
+            if (puntuacion == obtener(tableroSumado, tableroSumado.length - 1)) {
+              println("Ya no puedes mover verticalmente")
+              juego(
+                rellenarTab(moverTodoAbajo(reverse(quitarHasta(tableroSumado, 2)), columnas, columnas), casillas, dificultad),
+                columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), bloqueoEjeX, true, vidas, modo)
+
+            } else {
+              juego(
+                rellenarTab(moverTodoAbajo(reverse(quitarHasta(tableroSumado, 2)), columnas, columnas), casillas, dificultad),
+                columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), false, false, vidas, modo)
+            }
+          } else {
+            juego(
+              rellenarTab(moverTodoAbajo(reverse(quitarHasta(tableroSumado, 2)), columnas, columnas), casillas, dificultad),
+              columnas, dificultad, casillas, obtener(tableroSumado, tableroSumado.length - 1), obtener(tableroSumado, tableroSumado.length), false, false, vidas, modo)
+          }
+        }
+        case ('e' | 'E') => println("¡Hasta la próxima!")
+        case default => {
+          println("Direccion imposible!")
+          juego(tablero, columnas, dificultad, casillas, puntuacion, conteo, bloqueoEjeX, bloqueoEjeY, vidas, modo)
+        }
+      }
+    }
   }
 
-  def juego(tablero: List[Int], columnas: Int, dificultad: Int,casillas:Int,puntuacion:Int): Unit = {
-    imprimir(tablero, columnas)
-    print("\nMovimiento: ")
-    println("Puntuacion: " + puntuacion)
-    val tecla = scala.io.StdIn.readChar()
-    tecla match {
-      case ('w' | 'W') => juego(arriba(tablero,columnas,dificultad,casillas,puntuacion), columnas, dificultad,casillas,puntuacion)
-      case ('a' | 'A') => juego(izquierda(tablero,columnas,dificultad,casillas), columnas, dificultad,casillas,puntuacion)
-      case ('d' | 'D') => juego(derecha(tablero,columnas,dificultad,casillas), columnas, dificultad,casillas,puntuacion)
-      case ('s' | 'S') => juego(abajo(tablero,columnas,dificultad,casillas,puntuacion), columnas, dificultad,casillas,puntuacion)
-      case ('e' | 'E') => println("¡Hasta la próxima!")
-      case default     => {
-        println("Direccion imposible!")
-        juego(tablero,columnas,dificultad,casillas,puntuacion)
+  def nuevaPartida(dificultad: Int, vidas: Int, puntuacion: Int, modo: Boolean): Unit = {
+    if (vidas > 0) {
+
+      dificultad match {
+        case 1 => {
+          val tam = 4
+          val tableroRelleno = rellenarTab(generarTab(tam * tam), 2, dificultad)
+          val casillas = 10
+          juego(tableroRelleno, tam, dificultad, casillas, puntuacion, 0, false, false, vidas, modo)
+        }
+        case 2 => {
+          val tam = 9
+          val tableroRelleno = rellenarTab(generarTab(tam * tam), 4, dificultad)
+          val casillas = 3
+          juego(tableroRelleno, tam, dificultad, casillas, puntuacion, 0, false, false, vidas, modo)
+        }
+        case 3 => {
+          val tam = 14
+          val tableroRelleno = rellenarTab(generarTab(tam * tam), 6, dificultad)
+          val casillas = 5
+          juego(tableroRelleno, tam, dificultad, casillas, puntuacion, 0, false, false, vidas, modo)
+        }
+        case 4 => {
+          val tam = 17
+          val tableroRelleno = rellenarTab(generarTab(tam * tam), 6, dificultad)
+          val casillas = 6
+          juego(tableroRelleno, tam, dificultad, casillas, puntuacion, 0, false, false, vidas, modo)
+        }
       }
+    } else {
+      println("Has perdido todas tus vidas :(\n")
+      println("Puntuacion final: " + puntuacion)
     }
 
   }
-  
-  def arriba(tablero:List[Int],columnas:Int,dificultad:Int,casillas:Int,puntuacion:Int):List[Int]={
-    rellenarTab(moverTodoArriba(sumarArriba(moverTodoArriba(tablero, columnas, columnas), columnas,puntuacion), columnas, columnas),casillas,dificultad)
-   
-  }
-  
-  def izquierda(tablero:List[Int],columnas:Int,dificultad:Int,casillas:Int):List[Int]={
-    rellenarTab(moverTodoIzquierda(sumarIzquierda(moverTodoIzquierda(tablero, columnas, columnas), columnas), columnas, columnas),casillas,dificultad)
-   
-  }
-  
-    def derecha(tablero:List[Int],columnas:Int,dificultad:Int,casillas:Int):List[Int]={
-    rellenarTab(moverTodoDerecha(reverse(sumarIzquierda(reverse(moverTodoDerecha(tablero, columnas, columnas)), columnas)), columnas, columnas),casillas,dificultad)
 
-  }
-    
-    def abajo(tablero:List[Int],columnas:Int,dificultad:Int,casillas:Int,puntuacion:Int):List[Int]={
-    rellenarTab(moverTodoAbajo(reverse(sumarArriba(reverse(moverTodoAbajo(tablero, columnas, columnas)), columnas,puntuacion)), columnas, columnas),casillas,dificultad)
+  def movimiento(modo: Boolean): Char = {
+    if (modo) {
+      scala.io.StdIn.readChar()
 
+    } else {
+      val random = util.Random;
+      (random.nextInt(4) + 1) match {
+        case 1 => 'a'
+        case 2 => 'w'
+        case 3 => 's'
+        case 4 => 'd'
+      }
+    }
   }
-  
 
   //------------------------------- PRUEBAS ----------------------------------------------
 
   def main(args: Array[String]) {
     println("¡Bienvenido al juego 16384!\n")
+    println("¿Que modo desea? (m:manual/a:automatico)\n")
+    val modo = scala.io.StdIn.readChar()
     println("¿Qué dificultad desea?\n")
     val dificultad = scala.io.StdIn.readInt()
     dificultad match {
       case 1 => {
         val tam = 4
-        val tableroRelleno = rellenarTab(generarTab(tam * tam), 2,dificultad)
+        val tableroRelleno = rellenarTab(generarTab(tam * tam), 2, dificultad)
         val casillas = 1
-        juego(tableroRelleno, tam, dificultad,casillas,0)
+        juego(tableroRelleno, tam, dificultad, casillas, 0, 0, false, false, 3, modo == 'm')
       }
       case 2 => {
         val tam = 9
-        val tableroRelleno = rellenarTab(generarTab(tam * tam), 4,dificultad)
-        val casillas=3
-        juego(tableroRelleno, tam, dificultad,casillas,0)
+        val tableroRelleno = rellenarTab(generarTab(tam * tam), 4, dificultad)
+        val casillas = 3
+        juego(tableroRelleno, tam, dificultad, casillas, 0, 0, false, false, 3, modo == 'm')
       }
       case 3 => {
         val tam = 14
-        val tableroRelleno = rellenarTab(generarTab(tam * tam), 6,dificultad)
-        val casillas=5
-        juego(tableroRelleno, tam, dificultad,casillas,0)
+        val tableroRelleno = rellenarTab(generarTab(tam * tam), 6, dificultad)
+        val casillas = 5
+        juego(tableroRelleno, tam, dificultad, casillas, 0, 0, false, false, 3, modo == 'm')
       }
       case 4 => {
         val tam = 17
-        val tableroRelleno = rellenarTab(generarTab(tam * tam), 6,dificultad)
-        val casillas=6
-        juego(tableroRelleno, tam, dificultad,casillas,0)
+        val tableroRelleno = rellenarTab(generarTab(tam * tam), 6, dificultad)
+        val casillas = 6
+        juego(tableroRelleno, tam, dificultad, casillas, 0, 0, false, false, 3, modo == 'm')
       }
     }
 
