@@ -10,80 +10,168 @@ object game {
 
   //------------------------------FUNCIONES GENERICAS---------------------------------
 
-  //Obtiene el valor de una posicion indice del tablero
+  /**
+    * Obtiene el valor de una posicion del tablero
+    * @param tablero tablero en el que buscara el valor
+    * @param indice posicion en el tablero de la que se obtendra el valor
+    * @return Si existe el valor lo devuelve si no devuelve -1
+    */
   def obtener(tablero: List[Int], indice: Int): Int = {
-    if (!tablero.isEmpty) {
+    //Si el tablero no esta vacio
+    if (tablero.length>0) {
+      //Si el indice es la cabeza se devuelve
       if (indice == 1) tablero.head
+      //Si no se quita otro elemento y se reduce el indice
       else obtener(tablero.tail, indice - 1)
+      //Si esta fuera de rango devuelve -1
     } else -1
   }
 
+  /**
+    * Genera un valor aleatorio de un determinado conjunto
+    * @param dificultad Parametro que determinara los posibles valores a generar
+    * @return Valor generado aleatoriamente para la dificultad dada
+    */
   def crearValorRandom(dificultad: Int): Int = {
+    //Conjunto de posibles valores a generar
     val valores = List(2,4,8)
     val random = util.Random;
+    //Segun la dificultad coge unos u otros elementos del conjunto
     if (dificultad < 4) {
-      val colo = obtener(valores, random.nextInt(dificultad) + 1)
-      colo
+      val valor = obtener(valores, random.nextInt(dificultad) + 1)
+      valor
     } else {
-      val colo = obtener(valores, random.nextInt(3) + 1)
-      colo
-
+      val valor = obtener(valores, random.nextInt(3) + 1)
+      valor
     }
   }
 
+  /**
+    * Genera una posicion hasta el tamano maximo
+    * @param tam tamano que no debe sobrepasar
+    * @return posicion aleatoria dentro del rango
+    */
   def crearRandomPos(tam: Int): Int = {
     val random = util.Random;
+    //Valor aleatorio que se genera
     val pos = random.nextInt(tam) + 1
     pos
   }
-
+  /**
+    * Pone un valor dado en una lista en la posicion dada
+    * @param lista lista en la que se pondra el valor
+    * @param valor valor que se introducira
+    * @param pos posicion en la que se introducira
+    * @return lista con el valor introducido
+    */
+  def poner(lista: List[Int], valor: Int, pos: Int): List[Int] = {
+    //Comprueba si esta vacia
+    if (lista.length==0) Nil
+    //Si es la primera posicion se anade al principio
+    else if (pos == 1) valor :: lista.tail
+    //Si no se itera hasta llegar a ella
+    else lista.head :: poner(lista.tail, valor, pos - 1)
+  }
+//POSIBLE MEJORA
+  /**
+    * Pone un elemento en una posicion vacia con un valor aleatorio que depende de la dificultad
+    * @param lista lista o tablero donde se pondran los valores
+    * @param dificultad parametro que condiciona el valor a introducir
+    * @return el tablero con el valor introducido
+    */
   def poner(lista: List[Int], dificultad: Int): List[Int] = {
+    //Se genera una posicion y un valor aleatorios
     val pos = crearRandomPos(lista.length)
-    val col = crearValorRandom(dificultad)
-    if (lista.isEmpty) Nil
-    if (obtener(lista, pos) == 0)
-      if (pos == 1) col :: lista.tail
-      else lista.head :: poner(lista.tail, dificultad)
-    else poner(lista, dificultad)
+    val valor = crearValorRandom(dificultad)
+    //Comprueba si esta vacia
+    if (lista.length==0) Nil
+    else{
+      //Si la posicion esta vacia
+      if (obtener(lista, pos) == 0)
+        //Coloca el valor en ella
+        poner(lista,valor,pos)
+      else poner(lista, dificultad)
+    }
   }
 
-  def poner2(l: List[Int], valor: Int, pos: Int): List[Int] = {
-    if (l.isEmpty) Nil
-    else if (pos == 1) valor :: l.tail
-    else l.head :: poner2(l.tail, valor, pos - 1)
-  }
 
+  /**
+    * Genera un tablero relleno de ceros (vectorizado)
+    * @param tam tamano que tendra el tablero
+    * @return tablero creado lleno de 0
+    */
   def generarTab(tam: Int): List[Int] = {
     if (tam == 0) Nil
+    //Llamada recursiva hasta que el tamano sea el deseado
     else 0 :: generarTab(tam - 1)
   }
 
+  /**
+    *Cuenta el numero de huecos que hay (posiciones a 0)
+    * @param tablero tablero en el que se contaran
+    * @return numero de huecos del tablero
+    */
   def huecosLibres(tablero: List[Int]): Int = {
+    //Si el tablero no es vacio contamos
     if (tablero.length > 0) {
+      //Cada vez que haya una celda vacia se suma uno y se llama recursivamente
       if (tablero.head == 0)
         huecosLibres(tablero.tail) + 1
       else
+      //Si no es 0 se llama recursivamente sin contar
         huecosLibres(tablero.tail)
     } else 0
   }
+
+  /**
+    * Rellena el tablero con un numero de semillas segun una dificultad
+    * @param tablero tablero que sera rellenado
+    * @param numCasillas cantidad de casillas a rellenar
+    * @param dificultad dificultad que condicionara los valores de relleno
+    * @return el tablero ya relleno
+    */
   def rellenarTab(tablero: List[Int], numCasillas: Int, dificultad: Int): List[Int] = {
-    if (tablero.isEmpty) Nil
-    else if ((huecosLibres(tablero) > 0) && (numCasillas != 0)) { rellenarTab(poner(tablero, dificultad), numCasillas - 1, dificultad) }
+    if (tablero.length==0) Nil
+    //Mientras haya huecos y casillas se rellena el tablero
+    else if ((huecosLibres(tablero) > 0) && (numCasillas != 0)) { rellenarTab(poner(tablero, dificultad), numCasillas - 1, dificultad)}
+    //Finalmente devuelve el tablero
     else tablero
   }
 
-    def imprimir(lista: List[Int], columnas: Int) {
-    if (!lista.isEmpty) {
+  /**
+    *Imprime el tablero con su formato adecuado
+    * @param lista tablero que se va a mostrar por pantalla
+    * @param columnas columnas que tendra cada fila
+    */
+  def imprimir(lista: List[Int], columnas: Int):Unit={
+    if (lista.length>0) {
+      //Cuando llega a la ultima columna pasa a la siguiente fila
       if (lista.length % columnas == 0) print("\n|")
+      //Espacios que corrigen visualmente los valores del tablero
       val corregirEspacios = espacios(lista.head)
+      //Imprime los valores del tablero con los espacios ajustados
       print(corregirEspacios + lista.head+ "|")
+      //Se vuelve a llamar a imprimir
       imprimir(lista.tail, columnas)
     }
   }
+
+  /**
+    * Espacios generados para cada valor
+    * @param numero valor del que dependen los espacios
+    * @return espacios que ajustaran el valor
+    */
   def espacios(numero:Int):String={
     " "*(7-digitos(numero))
   }
+
+  /**
+    * Calcula la cantidad de digitos del numero
+    * @param numero numero que se comprobara
+    * @return digitos del numero
+    */
   def digitos(numero:Int):Int={
+    //Si es menor que la condicion devuelve los digitos correspondientes hasta 7
     if (numero<10){1}
     else if (numero<100){2}
     else if (numero<1000){3}
@@ -93,9 +181,18 @@ object game {
     else {7}
   }
 
+  /**
+    * Elimina el valor de la posicion dada del tablero
+    * @param tablero tablero en el que se eliminara la posicion
+    * @param indice posicion que sera eliminada
+    * @return tablero con la posicion eliminada
+    */
   def eliminar(tablero: List[Int], indice: Int): List[Int] = {
-    if (!tablero.isEmpty) {
+   //Comprueba si no esta vacio
+    if (tablero.length>0) {
+      //Comprueba si es la cabeza para anadir 0
       if (indice == 1) 0 :: tablero.tail
+      //Si no vuelve a buscarlo recursivamente
       else tablero.head :: eliminar(tablero.tail, indice - 1)
     } else tablero
   }
