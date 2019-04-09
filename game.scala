@@ -80,10 +80,10 @@ object game {
     }
   }
 
-  def eliminarSumar(tablero: List[Int], indice: Int): List[Int] = {
+  def eliminar(tablero: List[Int], indice: Int): List[Int] = {
     if (!tablero.isEmpty) {
       if (indice == 1) 0 :: tablero.tail
-      else tablero.head :: eliminarSumar(tablero.tail, indice - 1)
+      else tablero.head :: eliminar(tablero.tail, indice - 1)
     } else tablero
   }
 
@@ -99,7 +99,7 @@ object game {
   def moverAbajo(tablero: List[Int], columnas: Int): List[Int] = {
     if (!tablero.isEmpty) {
       if (tablero.head > 0) {
-        if (obtener(tablero, columnas + 1) == 0) moverAbajo(poner2(eliminarSumar(tablero, 1), tablero.head, columnas + 1), columnas)
+        if (obtener(tablero, columnas + 1) == 0) moverAbajo(poner2(eliminar(tablero, 1), tablero.head, columnas + 1), columnas)
         else tablero.head :: moverAbajo(tablero.tail, columnas)
 
       } else tablero.head :: moverAbajo(tablero.tail, columnas)
@@ -108,7 +108,7 @@ object game {
   def moverDerecha(tablero: List[Int], columnas: Int): List[Int] = {
     if (!tablero.isEmpty) {
       if ((tablero.head > 0)) {
-        if ((obtener(tablero, 2) == 0) && ((tablero.length) % columnas != 1)) moverDerecha(poner2(eliminarSumar(tablero, 1), tablero.head, 2), columnas)
+        if ((obtener(tablero, 2) == 0) && ((tablero.length) % columnas != 1)) moverDerecha(poner2(eliminar(tablero, 1), tablero.head, 2), columnas)
         else tablero.head :: moverDerecha(tablero.tail, columnas)
 
       } else tablero.head :: moverDerecha(tablero.tail, columnas)
@@ -118,7 +118,7 @@ object game {
     val tablero_aux = reverse(tablero)
     if (!tablero_aux.isEmpty) {
       if (tablero_aux.head > 0) {
-        if (obtener(tablero_aux, columnas + 1) == 0) reverse(moverAbajo(poner2(eliminarSumar(tablero_aux, 1), tablero_aux.head, columnas + 1), columnas))
+        if (obtener(tablero_aux, columnas + 1) == 0) reverse(moverAbajo(poner2(eliminar(tablero_aux, 1), tablero_aux.head, columnas + 1), columnas))
         else reverse(tablero_aux.head :: moverAbajo(tablero_aux.tail, columnas))
 
       } else reverse(tablero_aux.head :: moverAbajo(tablero_aux.tail, columnas))
@@ -128,7 +128,7 @@ object game {
     val tablero_aux = reverse(tablero)
     if (!tablero_aux.isEmpty) {
       if (tablero_aux.head > 0) {
-        if (obtener(tablero_aux, 2) == 0) reverse(moverDerecha(poner2(eliminarSumar(tablero_aux, 1), tablero_aux.head, 2), columnas))
+        if (obtener(tablero_aux, 2) == 0) reverse(moverDerecha(poner2(eliminar(tablero_aux, 1), tablero_aux.head, 2), columnas))
         else reverse(tablero_aux.head :: moverDerecha(tablero_aux.tail, columnas))
 
       } else reverse(tablero_aux.head :: moverDerecha(tablero_aux.tail, columnas))
@@ -157,34 +157,63 @@ object game {
   def sumarIzquierda(tablero: List[Int], columnas: Int): List[Int] = {
     if (!tablero.isEmpty) {
       if ((tablero.head > 0)) {
-        if ((obtener(tablero, 2) == tablero.head) && ((tablero.length) % columnas != 1)) sumarIzquierda(poner2(eliminarSumar(tablero, 2), tablero.head * 2, 1), columnas)
+        if ((obtener(tablero, 2) == tablero.head) && ((tablero.length) % columnas != 1)) sumarIzquierda(poner2(eliminar(tablero, 2), tablero.head * 2, 1), columnas)
         else tablero.head :: sumarIzquierda(tablero.tail, columnas)
       } else tablero.head :: sumarIzquierda(tablero.tail, columnas)
     } else tablero
   }
-  def sumarArriba(tablero: List[Int], columnas: Int): List[Int] = {
+  def sumarArriba(tablero: List[Int], columnas: Int,puntuacion:Int): List[Int] = {
     if (!tablero.isEmpty) {
       if ((tablero.head > 0)) {
-        if (obtener(tablero, columnas + 1) == tablero.head) sumarArriba(poner2(eliminarSumar(tablero, columnas + 1), tablero.head * 2, 1), columnas)
-        else tablero.head :: sumarArriba(tablero.tail, columnas)
+        if (obtener(tablero, columnas + 1) == tablero.head){
+          
+          sumarArriba(poner2(eliminar(tablero, columnas + 1), tablero.head * 2, 1), columnas,puntuacion+tablero.head*2)
+        }
+        else tablero.head :: sumarArriba(tablero.tail, columnas,puntuacion)
 
-      } else tablero.head :: sumarArriba(tablero.tail, columnas)
+      } else tablero.head :: sumarArriba(tablero.tail, columnas,puntuacion)
     } else tablero
   }
 
-  def juego(tablero: List[Int], columnas: Int, dificultad: Int): Unit = {
+  def juego(tablero: List[Int], columnas: Int, dificultad: Int,casillas:Int,puntuacion:Int): Unit = {
     imprimir(tablero, columnas)
     print("\nMovimiento: ")
+    println("Puntuacion: " + puntuacion)
     val tecla = scala.io.StdIn.readChar()
     tecla match {
-      case ('w' | 'W') => juego(moverTodoArriba(sumarArriba(moverTodoArriba(tablero, columnas, columnas), columnas), columnas, columnas), columnas, dificultad)
-      case ('a' | 'A') => juego(moverTodoIzquierda(sumarIzquierda(moverTodoIzquierda(tablero, columnas, columnas), columnas), columnas, columnas), columnas, dificultad)
-      case ('d' | 'D') => juego(moverTodoDerecha(reverse(sumarIzquierda(reverse(moverTodoDerecha(tablero, columnas, columnas)), columnas)), columnas, columnas), columnas, dificultad)
-      case ('s' | 'S') => juego(moverTodoAbajo(reverse(sumarArriba(reverse(moverTodoAbajo(tablero, columnas, columnas)), columnas)), columnas, columnas), columnas, dificultad)
+      case ('w' | 'W') => juego(arriba(tablero,columnas,dificultad,casillas,puntuacion), columnas, dificultad,casillas,puntuacion)
+      case ('a' | 'A') => juego(izquierda(tablero,columnas,dificultad,casillas), columnas, dificultad,casillas,puntuacion)
+      case ('d' | 'D') => juego(derecha(tablero,columnas,dificultad,casillas), columnas, dificultad,casillas,puntuacion)
+      case ('s' | 'S') => juego(abajo(tablero,columnas,dificultad,casillas,puntuacion), columnas, dificultad,casillas,puntuacion)
       case ('e' | 'E') => println("¡Hasta la próxima!")
+      case default     => {
+        println("Direccion imposible!")
+        juego(tablero,columnas,dificultad,casillas,puntuacion)
+      }
     }
 
   }
+  
+  def arriba(tablero:List[Int],columnas:Int,dificultad:Int,casillas:Int,puntuacion:Int):List[Int]={
+    rellenarTab(moverTodoArriba(sumarArriba(moverTodoArriba(tablero, columnas, columnas), columnas,puntuacion), columnas, columnas),casillas,dificultad)
+   
+  }
+  
+  def izquierda(tablero:List[Int],columnas:Int,dificultad:Int,casillas:Int):List[Int]={
+    rellenarTab(moverTodoIzquierda(sumarIzquierda(moverTodoIzquierda(tablero, columnas, columnas), columnas), columnas, columnas),casillas,dificultad)
+   
+  }
+  
+    def derecha(tablero:List[Int],columnas:Int,dificultad:Int,casillas:Int):List[Int]={
+    rellenarTab(moverTodoDerecha(reverse(sumarIzquierda(reverse(moverTodoDerecha(tablero, columnas, columnas)), columnas)), columnas, columnas),casillas,dificultad)
+
+  }
+    
+    def abajo(tablero:List[Int],columnas:Int,dificultad:Int,casillas:Int,puntuacion:Int):List[Int]={
+    rellenarTab(moverTodoAbajo(reverse(sumarArriba(reverse(moverTodoAbajo(tablero, columnas, columnas)), columnas,puntuacion)), columnas, columnas),casillas,dificultad)
+
+  }
+  
 
   //------------------------------- PRUEBAS ----------------------------------------------
 
@@ -196,22 +225,26 @@ object game {
       case 1 => {
         val tam = 4
         val tableroRelleno = rellenarTab(generarTab(tam * tam), 2,dificultad)
-        juego(tableroRelleno, tam, dificultad)
+        val casillas = 1
+        juego(tableroRelleno, tam, dificultad,casillas,0)
       }
       case 2 => {
         val tam = 9
         val tableroRelleno = rellenarTab(generarTab(tam * tam), 4,dificultad)
-        juego(tableroRelleno, tam, dificultad)
+        val casillas=3
+        juego(tableroRelleno, tam, dificultad,casillas,0)
       }
       case 3 => {
         val tam = 14
         val tableroRelleno = rellenarTab(generarTab(tam * tam), 6,dificultad)
-        juego(tableroRelleno, tam, dificultad)
+        val casillas=5
+        juego(tableroRelleno, tam, dificultad,casillas,0)
       }
       case 4 => {
         val tam = 17
         val tableroRelleno = rellenarTab(generarTab(tam * tam), 6,dificultad)
-        juego(tableroRelleno, tam, dificultad)
+        val casillas=6
+        juego(tableroRelleno, tam, dificultad,casillas,0)
       }
     }
 
