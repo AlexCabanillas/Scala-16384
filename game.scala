@@ -72,12 +72,25 @@ object game {
     else tablero
   }
 
-  def imprimir(lista: List[Int], columnas: Int) {
+    def imprimir(lista: List[Int], columnas: Int) {
     if (!lista.isEmpty) {
-      if (lista.length % columnas == 0) println()
-      print("|" + lista.head + "|")
+      if (lista.length % columnas == 0) print("\n|")
+      val corregirEspacios = espacios(lista.head)
+      print(corregirEspacios + lista.head+ "|")
       imprimir(lista.tail, columnas)
     }
+  }
+  def espacios(numero:Int):String={
+    " "*(7-digitos(numero))
+  }
+  def digitos(numero:Int):Int={
+    if (numero<10){1}
+    else if (numero<100){2}
+    else if (numero<1000){3}
+    else if (numero<10000){4}
+    else if (numero<100000){5}
+    else if (numero<1000000){6}
+    else {7}
   }
 
   def eliminar(tablero: List[Int], indice: Int): List[Int] = {
