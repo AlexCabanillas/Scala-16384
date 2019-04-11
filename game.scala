@@ -255,7 +255,7 @@ object juego {
     else tablero.head :: quitarHasta(tablero.tail, limite)
   }
 
-  //------------------------   MOVIMIENTOS   -------------------------------
+  //------------------------   MOVIMIENTOS SIMPLES  -------------------------------
   /**
     * Mueve abajo una fila completa si hay hueco (valor es 0)
     *
@@ -286,20 +286,7 @@ object juego {
     * @return devuelve el tablero con la fila subida
     */
   def moverArriba(tablero: List[Int], columnas: Int): List[Int] = {
-    //Se usa el tablero invertido
-    val tablero_aux = reverse(tablero)
-    //Comprueba si no esta vacio
-    if (tablero.length > 0) {
-      //Comprueba si el actual no es 0
-      if (tablero_aux.head > 0) {
-        //Si es asi y hay hueco llamamos a mover abajo poniendo el elemento pero invirtiendolo
-        if (obtener(tablero_aux, columnas + 1) == 0) reverse(moverAbajo(poner(eliminar(tablero_aux, 1), tablero_aux.head, columnas + 1), columnas))
-        //Si no continuamos recorriendo el tablero
-        else reverse(tablero_aux.head :: moverAbajo(tablero_aux.tail, columnas))
-        //Si no continuamos recorriendo el tablero
-      } else reverse(tablero_aux.head :: moverAbajo(tablero_aux.tail, columnas))
-      //Si es vacio se devuelve el tablero
-    } else tablero_aux
+    reverse(moverAbajo(reverse(tablero), columnas))
   }
 
   /**
@@ -332,20 +319,7 @@ object juego {
     * @return devuelve el tablero con la columna movida
     */
   def moverIzquierda(tablero: List[Int], columnas: Int): List[Int] = {
-    //Se usa el tablero invertido
-    val tablero_aux = reverse(tablero)
-    //Comprueba si esta vacio
-    if (tablero_aux.length > 0) {
-      //Comprueba si el valor actual es distinto de cero
-      if (tablero_aux.head > 0) {
-        //Si es asi y hay hueco llamamos a mover derecha poniendo el elemento pero invirtiendolo
-        if (obtener(tablero_aux, 2) == 0) reverse(moverDerecha(poner(eliminar(tablero_aux, 1), tablero_aux.head, 2), columnas))
-        //Si no continuamos recorriendo el tablero
-        else reverse(tablero_aux.head :: moverDerecha(tablero_aux.tail, columnas))
-        //Si no continuamos recorriendo el tablero
-      } else reverse(tablero_aux.head :: moverDerecha(tablero_aux.tail, columnas))
-      //Si es vacio se devuelve el tablero
-    } else tablero_aux
+    reverse(moverDerecha(reverse(tablero), columnas))
   }
 
   //------------------------ MOVIMIENTO DE TODAS LAS CASILLAS-------------------------------
@@ -457,6 +431,105 @@ object juego {
     } else tablero ::: puntuacion :: conteo :: Nil
   }
 
+  //------------------------------ MOVIMIENTO AUTOMATICO SIN OPTIMIZAR--------------------------------
+  /**
+    * Genera un movimiento aleatorio
+    *
+    * @return el caracter que se ha generado
+    */
+  def movimientoAleatorio(): Char = {
+    val random = util.Random;
+    (random.nextInt(4) + 1) match {
+      case 1 => 'a'
+      case 2 => 'w'
+      case 3 => 's'
+      case 4 => 'd'
+    }
+  }
+
+  //-------------------------------MOVIMIENTO OPTIMIZADO------------------------------------
+  /**
+    * Genera un movimiento en funcion a futuras puntuaciones y casillas vacias
+    *
+    * @param tablero     tablero que se calculara
+    * @param columnas    numero de columnas del tablero
+    * @param bloqueoEjeX Indica si se han bloqueado los movimientos horizontales
+    * @param bloqueoEjeY Indica si se han bloqueado los movimientos verticales
+    * @return el mejor movimiento para hacer
+    */
+  def movimientoOptimizado(tablero: List[Int], columnas: Int, bloqueoEjeX: Boolean, bloqueoEjeY: Boolean): Char = {
+    //Si se bloquea un eje solo se puede mover en una direccion
+    if (bloqueoEjeX) {
+      movAleatorioEjeY()
+    }
+    //Si se bloquea un eje solo se puede mover en una direccion
+    else if (bloqueoEjeY) {
+      movAleatorioEjeX()
+    }
+    //Si no estan bloqueados se aplica la optimizacion
+    else {
+      //Se calculan las posibles puntuaciones en cada direccion y los huecos de cada direccion (aprovechamiento de simetria de los movimientos en una direccion)
+      val puntuacionVertical = obtener(sumarVertical(moverTodoArriba(tablero, columnas, columnas), columnas, 0, 0), tablero.length + 1)
+      val puntuacionHorizontal = obtener(sumarHorizontal(moverTodoIzquierda(tablero, columnas, columnas), columnas, 0, 0), tablero.length + 1)
+      val huecosVertical = huecosLibres(sumarHorizontal(moverTodoIzquierda(tablero, columnas, columnas), columnas, 0, 0))
+      val huecosHorizontal = huecosLibres(sumarVertical(moverTodoArriba(tablero, columnas, columnas), columnas, 0, 0))
+      //Valores heuristicos definidos por los huecos disponibles y puntuaciones de las jugadas
+      val heuristicaVertical = huecosVertical * 0.6 + puntuacionVertical * 0.4
+      val heuristicaHorizontal = huecosHorizontal * 0.6 + puntuacionHorizontal * 0.4
+      //Si la heuristica vertical es mayor que la horizontal el movimiento sera horizontal
+      if (heuristicaVertical > heuristicaHorizontal) {
+        movAleatorioEjeY()
+      }
+      else {
+        movAleatorioEjeX()
+      }
+    }
+  }
+
+  /**
+    * Genera un movimiento aleatorio en horizontal
+    *
+    * @return movimiento a realizar
+    */
+  def movAleatorioEjeX(): Char = {
+    val random = util.Random;
+    (random.nextInt(2) + 1) match {
+      case 1 => 'a'
+      case 2 => 'd'
+    }
+  }
+
+  /**
+    * Genera un movimiento aleatorio en vertical
+    *
+    * @return movimiento a realizar
+    */
+  def movAleatorioEjeY(): Char = {
+    val random = util.Random;
+    (random.nextInt(2) + 1) match {
+      case 1 => 's'
+      case 2 => 'w'
+    }
+  }
+
+  /**
+    * Funcion que selecciona el movimiento en funcion del modo
+    *
+    * @param modo modo del juego manual = t auto = f
+    * @return devuelve el movimiento realizado
+    */
+
+  def movimiento(tablero: List[Int], columnas: Int, bloqueoEjeX: Boolean, bloqueoEjeY: Boolean, modo: Boolean): Char = {
+    //Si el modo es manual lee el teclado
+    if (modo) {
+      scala.io.StdIn.readChar()
+      //Si no genera un valor aleatorio
+    } else {
+      movimientoOptimizado(tablero, columnas, bloqueoEjeX, bloqueoEjeY)
+    }
+  }
+
+  //----------------------------BUCLE DEL JUEGO------------------------------------
   /**
     * Bucle del juego que se encargara de llamar a las distintas funciones que permiten su funcionamiento
     *
@@ -571,7 +644,7 @@ object juego {
       //Todas las dimensiones y casillas que se rellenaran en funcion de la dificultad
       val dimensiones = List(4, 9, 14, 17)
       val casillasIniciales = List(2, 4, 6, 6)
-      val casillas = List(2, 4, 6, 6)
+      val casillas = List(1, 3, 5, 6)
       val dim = obtener(dimensiones, dificultad)
       //Relleno inicial del tablero
       val tableroRelleno = rellenarTab(generarTab(dim * dim), obtener(casillasIniciales, dificultad), dificultad)
@@ -583,95 +656,6 @@ object juego {
     }
   }
 
-  //------------------------------ MOVIMIENTO AUTOMATICO SIN OPTIMIZAR--------------------------------
-
-  def movimientoAleatorio(): Char = {
-    val random = util.Random;
-    (random.nextInt(4) + 1) match {
-      case 1 => 'a'
-      case 2 => 'w'
-      case 3 => 's'
-      case 4 => 'd'
-    }
-  }
-
-  //-------------------------------MOVIMIENTO OPTIMIZADO------------------------------------
-
-  def movimientoOptimizado(tablero: List[Int], columnas: Int, bloqueoEjeX: Boolean, bloqueoEjeY: Boolean): Char = {
-    //Si se bloquea un eje solo se puede mover en una direccion
-    if (bloqueoEjeX) {
-      movAleatorioEjeY()
-    }
-    //Si se bloquea un eje solo se puede mover en una direccion
-    else if (bloqueoEjeY) {
-      movAleatorioEjeX()
-    }
-    //Si no estan bloqueados se aplica la optimizacion
-    else {
-      //Se calculan las posibles puntuaciones en cada direccion y los huecos de cada direccion (aprovechamiento de simetria de los movimientos en una direccion)
-      val puntuacionVertical = obtener(sumarVertical(moverTodoArriba(tablero, columnas, columnas), columnas, 0, 0), tablero.length + 1)
-      val puntuacionHorizontal = obtener(sumarHorizontal(moverTodoIzquierda(tablero, columnas, columnas), columnas, 0, 0), tablero.length + 1)
-      val huecosVertical = huecosLibres(sumarHorizontal(moverTodoIzquierda(tablero, columnas, columnas), columnas, 0, 0))
-      val huecosHorizontal = huecosLibres(sumarVertical(moverTodoArriba(tablero, columnas, columnas), columnas, 0, 0))
-      //Valores heuristicos definidos por los huecos disponibles y puntuaciones de las jugadas
-      val heuristicaVertical = huecosVertical * 0.6 + puntuacionVertical * 0.4
-      val heuristicaHorizontal = huecosHorizontal * 0.6 + puntuacionHorizontal * 0.4
-      //Si la heuristica vertical es mayor que la horizontal el movimiento sera horizontal
-      if (heuristicaVertical > heuristicaHorizontal) {
-        movAleatorioEjeY()
-      }
-      else {
-        movAleatorioEjeX()
-      }
-    }
-  }
-
-  /**
-    * Genera un movimiento aleatorio en horizontal
-    *
-    * @return movimiento a realizar
-    */
-  def movAleatorioEjeX(): Char = {
-    val random = util.Random;
-    (random.nextInt(2) + 1) match {
-      case 1 => 'a'
-      case 2 => 'd'
-    }
-  }
-
-  /**
-    * Genera un movimiento aleatorio en vertical
-    *
-    * @return movimiento a realizar
-    */
-  def movAleatorioEjeY(): Char = {
-    val random = util.Random;
-    (random.nextInt(2) + 1) match {
-      case 1 => 's'
-      case 2 => 'w'
-    }
-  }
-
-  /**
-    * Funcion que selecciona el movimiento en funcion del modo
-    *
-    * @param modo modo del juego manual = t auto = f
-    * @return devuelve el movimiento realizado
-    */
-
-  def movimiento(tablero: List[Int], columnas: Int, bloqueoEjeX: Boolean, bloqueoEjeY: Boolean, modo: Boolean): Char = {
-    //Si el modo es manual lee el teclado
-    if (modo) {
-      scala.io.StdIn.readChar()
-      //Si no genera un valor aleatorio
-    } else {
-      //movimientoOptimizado(tablero, columnas, bloqueoEjeX, bloqueoEjeY)
-      movimientoAleatorio()
-    }
-
-  }
-
-
   //------------------------------- MAIN ----------------------------------------------
   def main(args: Array[String]) {
     println("¡Bienvenido al juego 16384!\n")
@@ -679,7 +663,6 @@ object juego {
     val modo = scala.io.StdIn.readChar()
     println("¿Qué dificultad desea?\n")
     val dificultad = scala.io.StdIn.readInt()
-    nuevaPartida(dificultad, 1, 0, modo == 'm')
+    nuevaPartida(dificultad, 3, 0, modo == 'm')
   }
-
 }
